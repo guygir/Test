@@ -2,7 +2,8 @@
 #define DATA_MANIPULATION_DTYPE16_H
 
 // Reordering function for float bits
-static uint32_t reorder_float_bits_dtype16(float number);
+static uint32_t reorder_float_bits_dtype16_1(float number);
+static void reorder_float_bits_dtype16_2(const float *numbers, uint32_t *results, int count);
 static void reorder_all_floats_dtype16(uint8_t *src, size_t len);
 int split_bytearray_dtype16(uint8_t *src, size_t len, uint8_t **chunk_buffs,
                             size_t *unCompChunksSizeCurChunk, int bits_mode,

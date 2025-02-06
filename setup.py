@@ -1,7 +1,16 @@
 from setuptools import setup, find_packages, Extension
 import subprocess
 import os
+import platform
 
+def check_avx2_support():
+    try:
+        flags = subprocess.check_output(['cat', '/proc/cpuinfo']).decode()
+        print("FOUND AVX2!")
+        return 'avx2' in flags
+    except:
+        print("NOT FOUND AVX2!")
+        return False
 
 def update_submodules():
     if os.path.exists(".git"):
@@ -11,8 +20,19 @@ def update_submodules():
             print(f"Failed to update submodules: {e}")
             raise
 
-
+# Update submodules
 update_submodules()
+
+# Check for AVX2 support
+has_avx2 = check_avx2_support()
+
+# Base compile arguments
+compile_args = ["-O3", "-Wall", "-Wextra"]
+link_args = ["-O3", "-Wall", "-Wextra"]
+
+# Add AVX2 flag if supported
+if has_avx2:
+    compile_args.append("-mavx2")
 
 zipnn_core_extension = Extension(
     "zipnn_core",
@@ -29,8 +49,9 @@ zipnn_core_extension = Extension(
         "include/FiniteStateEntropy/lib/hist.c",
     ],
     include_dirs=["include/FiniteStateEntropy/lib/", "csrc/"],
-    extra_compile_args=["-O3", "-Wall", "-Wextra"],
-    extra_link_args=["-O3", "-Wall", "-Wextra"],
+    extra_compile_args=compile_args,
+    extra_link_args=link_args,
+    define_macros=[('HAS_AVX2', '1')] if has_avx2 else []
 )
 
 setup(

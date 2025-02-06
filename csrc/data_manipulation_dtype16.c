@@ -1,32 +1,87 @@
 #include <Python.h>
 #include <stdint.h>
 #include <time.h>
+#ifdef HAS_AVX2
+#include <stdint.h>
+#include <immintrin.h>
+#endif
 
 ///////////////////////////////////
 /// Split Helper Functions ///////
 //////////////////////////////////
 
 // Reordering function for float bits
-static uint32_t reorder_float_bits_dtype16(float number) {
-  union {
-    float f;
-    uint32_t u;
-  } value = {.f = number};
+///
 
-  uint32_t sign = (value.u >> 8) & 0x800080;
-  uint32_t exponent = (value.u << 1) & 0xFF00FF00;
-  uint32_t mantissa = (value.u) & 0x7F007F;
-  return exponent | sign | mantissa;
+#ifdef HAS_AVX2
+static void reorder_float_bits_dtype16_2(const float *numbers, uint32_t *results, int count) {
+    int i;
+    for (i = 0; i <= count - 8; i += 8) {
+        // Load 8 floats into an AVX2 register
+        __m256 f_vals = _mm256_loadu_ps(&numbers[i]);
+
+        // Reinterpret as uint32_t (bitwise conversion)
+        __m256i u_vals = _mm256_castps_si256(f_vals);
+
+        // Extract sign: (value.u >> 8) & 0x800080
+        __m256i sign = _mm256_srli_epi32(u_vals, 8);
+        sign = _mm256_and_si256(sign, _mm256_set1_epi32(0x800080));
+
+        // Extract exponent: (value.u << 1) & 0xFF00FF00
+        __m256i exponent = _mm256_slli_epi32(u_vals, 1);
+        exponent = _mm256_and_si256(exponent, _mm256_set1_epi32(0xFF00FF00));
+
+        // Extract mantissa: (value.u) & 0x7F007F
+        __m256i mantissa = _mm256_and_si256(u_vals, _mm256_set1_epi32(0x7F007F));
+
+        // Combine results: exponent | sign | mantissa
+        __m256i result = _mm256_or_si256(_mm256_or_si256(sign, exponent), mantissa);
+
+        // Store results back
+        _mm256_storeu_si256((__m256i*)&results[i], result);
+    }
+
+    // Handle remaining floats (scalar fallback)
+    for (; i < count; i++) {
+        results[i] = reorder_float_bits_dtype16_1(numbers[i]);
+    }
 }
+#else
+// Original function to reorder a single float
+static uint32_t reorder_float_bits_dtype16_1(float number) {
+    union {
+        float f;
+        uint32_t u;
+    } value = {.f = number};
 
+    uint32_t sign = (value.u >> 8) & 0x800080;
+    uint32_t exponent = (value.u << 1) & 0xFF00FF00;
+    uint32_t mantissa = (value.u) & 0x7F007F;
+    return exponent | sign | mantissa;
+}
+#endif
+
+#ifdef HAS_AVX2
+static void reorder_all_floats_dtype16(uint8_t *src, size_t len) {
+    float *float_array = (float *)src;
+    uint32_t *uint_array = (uint32_t *)src; // Store result in uint32_t array
+    size_t num_floats = len / sizeof(float);
+
+    reorder_float_bits_dtype16_2(float_array, uint_array, num_floats);
+}
+#else
 // Helper function to reorder all floats in a bytearray
 static void reorder_all_floats_dtype16(uint8_t *src, size_t len) {
-  uint32_t *uint_array = (uint32_t *)src;
-  size_t num_floats = len / sizeof(uint32_t);
-  for (size_t i = 0; i < num_floats; i++) {
-    uint_array[i] = reorder_float_bits_dtype16(*(float *)&uint_array[i]);
-  }
+    uint32_t *uint_array = (uint32_t *)src;
+    size_t num_floats = len / sizeof(uint32_t);
+    for (size_t i = 0; i < num_floats; i++) {
+        uint_array[i] = reorder_float_bits_dtype16_1(*(float *)&uint_array[i]);
+    }
 }
+#endif
+
+
+///
 
 // Helper function to split a bytearray into groups
 int split_bytearray_dtype16(uint8_t *src, size_t len, uint8_t **chunk_buffs,
