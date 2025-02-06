@@ -63,7 +63,7 @@ static void reorder_float_bits_dtype16_2(const float *numbers, uint32_t *results
 #endif
 
 #ifdef HAS_AVX2
-/*
+
 static void reorder_all_floats_dtype16(uint8_t *src, size_t len) {
     printf("new func org");
     float *float_array = (float *)src;
@@ -72,18 +72,9 @@ static void reorder_all_floats_dtype16(uint8_t *src, size_t len) {
 
     reorder_float_bits_dtype16_2(float_array, uint_array, num_floats);
 }
-*/
-static void reorder_all_floats_dtype16(uint8_t *src, size_t len) {
-    printf("old func org");
-    uint32_t *uint_array = (uint32_t *)src;
-    size_t num_floats = len / sizeof(uint32_t);
-    for (size_t i = 0; i < num_floats; i++) {
-        uint_array[i] = reorder_float_bits_dtype16_1(*(float *)&uint_array[i]);
-    }
-}
+
 #else
 // Helper function to reorder all floats in a bytearray
-/*
 static void reorder_all_floats_dtype16(uint8_t *src, size_t len) {
     printf("old func org");
     uint32_t *uint_array = (uint32_t *)src;
@@ -92,15 +83,7 @@ static void reorder_all_floats_dtype16(uint8_t *src, size_t len) {
         uint_array[i] = reorder_float_bits_dtype16_1(*(float *)&uint_array[i]);
     }
 }
-*/
-static void reorder_all_floats_dtype16(uint8_t *src, size_t len) {
-    printf("new func org");
-    float *float_array = (float *)src;
-    uint32_t *uint_array = (uint32_t *)src; // Store result in uint32_t array
-    size_t num_floats = len / sizeof(float);
 
-    reorder_float_bits_dtype16_2(float_array, uint_array, num_floats);
-}
 #endif
 
 
