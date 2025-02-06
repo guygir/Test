@@ -56,7 +56,7 @@ static void reorder_float_bits_dtype16_2(const float *numbers, uint32_t *results
 
     // Handle remaining floats (scalar fallback)
     for (; i < count; i++) {
-        print("hey");
+        printf("hey");
         results[i] = reorder_float_bits_dtype16_1(numbers[i]);
     }
 }
