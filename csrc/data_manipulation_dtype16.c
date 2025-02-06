@@ -29,6 +29,7 @@ static uint32_t reorder_float_bits_dtype16_1(float number) {
 #ifdef HAS_AVX2
 static void reorder_float_bits_dtype16_2(const float *numbers, uint32_t *results, int count) {
     int i;
+    printf("new func!");
     for (i = 0; i <= count - 8; i += 8) {
         // Load 8 floats into an AVX2 register
         __m256 f_vals = _mm256_loadu_ps(&numbers[i]);
