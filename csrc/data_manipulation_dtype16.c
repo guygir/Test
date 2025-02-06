@@ -72,6 +72,7 @@ static void reorder_all_floats_dtype16(uint8_t *src, size_t len) {
 }
 */
 static void reorder_all_floats_dtype16(uint8_t *src, size_t len) {
+    printf("old base func");
     uint32_t *uint_array = (uint32_t *)src;
     size_t num_floats = len / sizeof(uint32_t);
     for (size_t i = 0; i < num_floats; i++) {
@@ -94,7 +95,7 @@ static void reorder_all_floats_dtype16(uint8_t *src, size_t len) {
     float *float_array = (float *)src;
     uint32_t *uint_array = (uint32_t *)src; // Store result in uint32_t array
     size_t num_floats = len / sizeof(float);
-
+    printf("new base func");
     reorder_float_bits_dtype16_2(float_array, uint_array, num_floats);
 }
 #endif
