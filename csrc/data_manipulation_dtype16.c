@@ -46,7 +46,7 @@ static void reorder_float_bits_dtype16_2(const float *numbers, uint32_t *results
         results[i] = reorder_float_bits_dtype16_1(numbers[i]);
     }
 }
-#else
+#endif
 // Original function to reorder a single float
 static uint32_t reorder_float_bits_dtype16_1(float number) {
     union {
@@ -59,7 +59,6 @@ static uint32_t reorder_float_bits_dtype16_1(float number) {
     uint32_t mantissa = (value.u) & 0x7F007F;
     return exponent | sign | mantissa;
 }
-#endif
 
 #ifdef HAS_AVX2
 static void reorder_all_floats_dtype16(uint8_t *src, size_t len) {
