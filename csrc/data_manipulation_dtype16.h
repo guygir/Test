@@ -3,7 +3,9 @@
 
 // Reordering function for float bits
 static uint32_t reorder_float_bits_dtype16_1(float number);
+#ifdef HAS_AVX2
 static void reorder_float_bits_dtype16_2(const float *numbers, uint32_t *results, int count);
+#endif
 static void reorder_all_floats_dtype16(uint8_t *src, size_t len);
 int split_bytearray_dtype16(uint8_t *src, size_t len, uint8_t **chunk_buffs,
                             size_t *unCompChunksSizeCurChunk, int bits_mode,
